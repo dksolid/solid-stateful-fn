@@ -96,6 +96,7 @@ function parseIstanbulReport(reportFilePath: string): Promise<{
   });
 }
 
+// @ts-expect-error node only
 const result = await parseIstanbulReport(path.resolve('./.nyc_output/cobertura-coverage.xml'));
 
 const svg = makeBadge({

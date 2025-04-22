@@ -65,6 +65,7 @@ const buildConfig: BuildOptions = {
   packages: 'external',
 };
 
+// @ts-expect-error node only
 await Promise.all([
   esbuild
     .build({
