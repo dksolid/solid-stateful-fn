@@ -9,6 +9,9 @@ eslint.config.*
 .gitignore
 lint-staged.config.*
 /test
+jest.config.js
+jest-preload.js
+pnpm-workspace.yaml
 
 .nyc_output
 coverage

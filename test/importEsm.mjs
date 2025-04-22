@@ -6,7 +6,7 @@ import * as exportContent from '../dist/esm/index.js';
 
 void describe('Test import esm', async () => {
   await it('success', () => {
-    assert.deepEqual(Object.keys(exportContent), ['fnAny']);
-    assert.deepEqual(typeof exportContent.fnAny, 'function');
+    assert.deepEqual(Object.keys(exportContent), ['addState']);
+    assert.deepEqual(typeof exportContent.addState, 'function');
   });
 });

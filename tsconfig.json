@@ -3,14 +3,20 @@
     "src",
     "test",
     "scripts",
+    "jest-preload.js",
+    "jest.config.js",
     "eslint.config.mjs",
     "lint-staged.config.mjs"
   ],
   "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
     "outDir": "dist",
-    "target": "esnext",
-    "module": "nodenext",
+    "module": "commonjs",
+    "target": "ES2022",
     "strict": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "tsBuildInfoFile": null
   }
 }
