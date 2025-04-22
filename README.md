@@ -1,20 +1,13 @@
-## Library for adding MobX observable state to async functions
+## Library for adding Solid.js signal state to async functions
 
-![coverage](https://github.com/dksolid/solid-stateful-fn/blob/master/packages/mobx-stateful-fn/cover.svg)
 [![npm](https://img.shields.io/npm/v/@dksolid/solid-stateful-fn)](https://www.npmjs.com/package/@dksolid/solid-stateful-fn)
-[![license](https://img.shields.io/npm/l/@dksolid/solid-stateful-fn)](https://github.com/dksolid/solid-stateful-fn/blob/master/packages/mobx-stateful-fn/LICENSE)
-![size](https://github.com/dksolid/solid-stateful-fn/blob/master/packages/mobx-stateful-fn/size.svg)
-
-> [!WARNING]  
-> It's fine if you use this library from NPM package with a **static versioning** in case you
-> want it for some pet-project or to test it's capabilities.
->
-> But for production use it's **strongly recommended** to create a fork, because I do not write
-> Changelogs and may break / add some functionality without notice.
+![coverage](https://github.com/dksolid/solid-stateful-fn/blob/main/assets/coverage.svg)
+![size-esm](https://github.com/dksolid/solid-stateful-fn/blob/main/assets/esm.svg)
+![size-cjs](https://github.com/dksolid/solid-stateful-fn/blob/main/assets/cjs.svg)
 
 The purpose of this library is to simplify tracking of async function execution. It uses a pattern
 "function as object", adding an observable state to the function, so you could easily:
-- show loaders in your React / any framework components
+- show loaders in your Solid components
 - see how much time the execution has taken
 - show error messages and names just from this function
 - easily track when all async functions have finished for SSR
@@ -49,7 +42,7 @@ Add `@dksolid/solid-stateful-fn` to package.json and install.
 
 ```typescript
 import { addState } from '@dksolid/solid-stateful-fn';
-import { autorun } from 'mobx';
+import { createRenderEffect } from 'solid-js';
 
 function asyncFunction() {
   return new Promise((resolve) => setTimeout(resolve, 100));
@@ -59,7 +52,7 @@ const asyncFunctionStateful = addState(asyncFunction, asyncFunction.name);
 
 // Now you can track this function's execution like
 
-autorun(() => {
+createRenderEffect(() => {
   console.log(JSON.stringify(asyncFunctionStateful.state));
 })
 
@@ -83,7 +76,7 @@ const asyncFunctionStateful = addState(() => Promise.resolve(), 'asyncFunctionSt
 
 ```typescript
 import { addState, TypeFnAsync } from '@dksolid/solid-stateful-fn';
-import { makeAutoObservable } from 'mobx';
+import { createMutable } from 'solid-js/store';
 
 function addStateToNamedMethod(ctx: any, fn: TypeFnAsync) {
   ctx[fn.name] = addState(fn.bind(ctx), fn.name);
@@ -91,14 +84,9 @@ function addStateToNamedMethod(ctx: any, fn: TypeFnAsync) {
 
 class ClassFunctions {
   constructor() {
-    // we have to exclude our functions from makeAutoObservable
-    makeAutoObservable(
-      this,
-      { asyncFunction: false },
-      { autoBind: true }
-    );
-    
     addStateToNamedMethod(this, this.asyncFunction);
+    
+    return createMutable(this);
   }
 
   asyncFunction() {
@@ -114,18 +102,13 @@ class ClassFunctions {
 
 ```typescript
 import { addState } from '@dksolid/solid-stateful-fn';
-import { makeAutoObservable } from 'mobx';
+import { createMutable } from 'solid-js/store';
 
 class ClassFunctions {
   constructor() {
-    // we have to exclude our functions from makeAutoObservable
-    makeAutoObservable(
-      this,
-      { asyncFunction: false },
-      { autoBind: true }
-    );
-    
     this.asyncFunction = addState(this.asyncFunction, 'asyncFunction');
+    
+    return createMutable(this);
   }
 
   asyncFunction = () => {
@@ -145,7 +128,6 @@ directly return the value defined in the mock. The logic inside `asyncFunction`
 
 ```typescript
 import { addState } from '@dksolid/solid-stateful-fn';
-import { runInAction } from 'mobx';
 
 function asyncFunction() {
   // WILL NOT BE EXECUTED
@@ -155,9 +137,7 @@ function asyncFunction() {
 
 const asyncFunctionStateful = addState(asyncFunction, asyncFunction.name);
 
-runInAction(() => {
-  asyncFunctionStateful.state.mock = Promise.resolve(2);
-});
+asyncFunctionStateful.state.mock = Promise.resolve(2);
 
 asyncFunctionStateful().then(data => console.log(data)) // 2
 ```
@@ -167,10 +147,10 @@ asyncFunctionStateful().then(data => console.log(data)) // 2
 #### Track execution / show loaders
 
 ```typescript
-const MyComponent = observer(function MyComponent() {
-  useEffect(() => {
+function MyComponent() {
+  createRenderEffect(() => {
     asyncFunctionStateful();
-  }, []);
+  });
   
   return (
     <div>
@@ -179,11 +159,11 @@ const MyComponent = observer(function MyComponent() {
       {!asyncFunctionStateful.state.isExecuting && 'Loaded!'}
     </div>
   )
-})
+}
 
 // or somewhere
 
-autorun(() => {
+createRenderEffect(() => {
   if (asyncFunctionStateful.state.isExecuting) {
     console.log(`${asyncFunctionStateful.name} is executing`);
   } else {
@@ -197,21 +177,21 @@ asyncFunctionStateful();
 #### Track execution time
 
 ```typescript
-const MyComponent = observer(function MyComponent() {
-  useEffect(() => {
+function MyComponent() {
+  createRenderEffect(() => {
     asyncFunctionStateful();
-  }, []);
+  });
   
   return (
     <div>
       {Boolean(asyncFunctionStateful.state.executionTime) && `Loading took ${asyncFunctionStateful.state.executionTime}`}
     </div>
   )
-})
+}
 
 // or somewhere
 
-autorun(() => {
+createRenderEffect(() => {
   if (asyncFunctionStateful.state.executionTime) {
     console.log(`${asyncFunctionStateful.name} took ${asyncFunctionStateful.state.executionTime}ms to finish`);
   }
@@ -223,10 +203,10 @@ asyncFunctionStateful();
 #### Show errors
 
 ```typescript
-const MyComponent = observer(function MyComponent() {
-  useEffect(() => {
+function MyComponent() {
+  createRenderEffect(() => {
     asyncFunctionStateful();
-  }, []);
+  });
   
   return (
     <div>
@@ -234,11 +214,11 @@ const MyComponent = observer(function MyComponent() {
       {asyncFunctionStateful.state.errorName && `Error name is ${asyncFunctionStateful.state.errorName}`}
     </div>
   )
-})
+}
 
 // or somewhere
 
-autorun(() => {
+createRenderEffect(() => {
   if (asyncFunctionStateful.state.error) {
     console.log(`${asyncFunctionStateful.name} failed with ${asyncFunctionStateful.state.error}`);
   }
@@ -250,24 +230,24 @@ asyncFunctionStateful();
 #### Cancel execution
 
 ```typescript
-const MyComponent = observer(function MyComponent() {
-  useEffect(() => {
+function MyComponent() {
+  createRenderEffect(() => {
     asyncFunctionStateful()
       .catch(error => {
         if (error.name === 'ACTION_CANCELED') {
           console.log('Component has been unmounted, so we will just ignore this error')
         }
       });
-    
-    return () => {
-      asyncFunctionStateful.state.isCancelled = true;
-    }
-  }, []);
+  });
+  
+  onCleanup(() => {
+    asyncFunctionStateful.state.isCancelled = true;
+  });
   
   return (
     <div></div>
   )
-})
+}
 
 // or somewhere
 
@@ -346,18 +326,6 @@ const interval = setInterval(() => {
     clearInterval(interval);
   }
 }, 10)
-
-// or smth. like
-
-mobx.reaction(
-  () => asyncFunctionStateful.state.isExecuting,
-  (isExecuting) => {
-    if (!isExecuting) {
-      // make the second call
-      asyncFunctionStateful();
-    }
-  }
-)
 ```
 
 or create several stateful functions like

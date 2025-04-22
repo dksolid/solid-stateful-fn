@@ -3,7 +3,7 @@
   "author": "dksolid",
   "license": "MIT",
   "version": "1.0.0",
-  "description": "",
+  "description": "Library for adding Solid.js signal state to async functions",
   "type": "module",
   "repository": {
     "type": "git",
